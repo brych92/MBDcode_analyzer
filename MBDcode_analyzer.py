@@ -2,7 +2,7 @@ import csv, re, sys
 
 from qgis.PyQt.QtGui import QCursor, QIcon, QPixmap
 
-from qgis.PyQt.QtCore import Qt, QUrl
+from qgis.PyQt.QtCore import Qt, QUrl, pyqtSignal
 
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
@@ -87,7 +87,25 @@ dk_codes = load_as_dict("tables/edssb.csv")
 
         
 #print(json.dumps(dk_codes, indent='  ', ensure_ascii=False))
+class ClickableLabel(QLabel):
+    clicked = pyqtSignal()  # Signal to be emitted when label is clicked
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.original_pixmap = None
+
+    def setPixmap(self, pixmap):
+        self.original_pixmap = pixmap
+        super().setPixmap(pixmap)
+
+    def mousePressEvent(self, event):
+        self.clicked.emit()  # Emit the clicked signal
+    
+    def resizeEvent(self, event):
+        if self.original_pixmap:
+            scaled_pixmap = self.original_pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            super().setPixmap(scaled_pixmap)
+        super().resizeEvent(event)
 
 class AboutDialog(QDialog):
     def __init__(self, icon):
@@ -98,12 +116,11 @@ class AboutDialog(QDialog):
         layout = QHBoxLayout()
         layout2 = QVBoxLayout()
         
-        self.image_label = QLabel()
+        self.image_label = ClickableLabel()
         pixmap = QPixmap("resources/humski.png") 
-        pixmap = pixmap.scaledToWidth(200)
+        #pixmap = pixmap.scaledToWidth(200)
         self.image_label.setPixmap(pixmap)
-        self.image_label.setAlignment(Qt.AlignLeft)
-        self.image_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.image_label.setAlignment(Qt.AlignLeft|Qt.AlignTop)
         layout.addWidget(self.image_label)
         
         layout.addLayout(layout2)
@@ -118,18 +135,18 @@ class AboutDialog(QDialog):
 де перша колонка позначена, як основна,а друга - як допустима згідно яких беруться можливі 
 коди функціональних зон відповідно до колонок.
 
-        2.  При виборі коду цільового призначення згідно з постановою №1051, програма використовує код
-        функціональної зони з Класифікатору та відповідний код будівлі з Таблиці, згідно з першим пунктом.
+        2.  При виборі коду цільового призначення земельної ділянки, програма використовує код
+функціональної зони з Класифікатору та відповідний код будівлі з Таблиці, згідно з першим пунктом.
 
         3.  При виборі коду функціонального призначення, програма визначає коди земельнихділянок згідно
 з Класифікатором, а потім автоматично визначає відповідні коди будівель з Таблиці, за аналогією з першим пунктом.
 
+Увага!!! Завжди перевіряйте результат роботи програми згідно офіційних джерел!
+Якщо ви знайшли помилки, будь ласка, повідомте на пошту brych92@gmail.com
+
 Версія: 1.0
 
-Розробник: Кучерявий
-
-Якщо ви знайшли помилки, будь ласка, повідомте на пошту brych92@gmail.com
-"""
+Розробник: Кучерявий"""
         message_label = QLabel(program_description)
         message_label.setAlignment(Qt.AlignJustify)
         layout2.addWidget(message_label)
@@ -144,16 +161,18 @@ class AboutDialog(QDialog):
         self.dialog_theme = QMediaPlayer()
         self.dialog_theme.setMedia(QMediaContent(QUrl.fromLocalFile("resources/theme.mp3")))  # Replace "fun_sound.wav" with your sound file
         self.dialog_theme.setVolume(10)
-        self.dialog_theme.play()
         
+        
+        self.image_label.clicked.connect(self.toggle_music)
+
         self.setFixedSize(self.sizeHint())
 
-    def mousePressEvent(self, event):
-        if self.dialog_theme.state() == 0:
+    def toggle_music(self):
+        if self.dialog_theme.state() == QMediaPlayer.StoppedState:
             self.dialog_theme.play()
         else:
             self.dialog_theme.stop()
-    
+
     def sizeHint(self):
         return self.minimumSizeHint()
 
@@ -178,9 +197,9 @@ class CustomListWidget(QListWidget):
     def contextMenuEvent(self, event):
         context_menu = QMenu(self)
 
-        copy_selected_action = QAction("Скопіювати виділене", self)
-        copy_all_action = QAction("Скопіювати все", self)
-        apply_action = QAction("Застосувати виділене", self)
+        apply_action = QAction(QIcon("resources/apply.png"), "Застосувати виділене", self)
+        copy_selected_action = QAction(QIcon("resources/copy_single.png"), "Скопіювати виділене", self)
+        copy_all_action = QAction(QIcon("resources/copy_all.png"), "Скопіювати все", self)
 
         copy_selected_action.triggered.connect(lambda: self.copy_selected_line())
         copy_all_action.triggered.connect(lambda: self.copy_all_lines())
