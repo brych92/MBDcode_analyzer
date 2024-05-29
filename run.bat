@@ -35,4 +35,4 @@ start /b pythonw MBDcode_analyzer.py
 
 rem python MBDcode_analyzer.py
 
-pause
+rem pause
