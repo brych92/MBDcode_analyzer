@@ -3,23 +3,37 @@ setlocal
 
 rem Search for QGIS installation directory
 for /d %%i in ("%ProgramFiles%\QGIS*") do (
+    echo Checking directory: %%i
     if exist "%%i\bin\qgis-bin.exe" (
         set QGIS_PATH=%%i
-        goto :found
+        echo Found "%%i\bin\qgis-bin.exe"
+	goto :found
+    )
+    if exist "%%i\bin\qgis-ltr-bin.exe" (
+        set QGIS_PATH=%%i
+        echo Found "%%i\bin\qgis-ltr-bin.exe"
+	goto :found
     )
 )
+
 
 :found
 
 if not defined QGIS_PATH (
     echo QGIS installation not found.
-    exit /b
+    pause
+exit /b
 )
 
-rem Set paths to be added to PYTHONPATH
-set PYTHONPATH=%QGIS_PATH%\apps\Python39;%QGIS_PATH%\apps\qgis\python;%PYTHONPATH%
 
-rem Run your Python script or start Python interpreter
-start /b pythonw MBDcode_analyzer.py
+set PYTHONPATH=%QGIS_PATH%\apps\Python39;%QGIS_PATH%\apps\qgis\python;%QGIS_PATH%\apps\qgis-ltr\python;%QGIS_PATH%\apps\Python39\Lib\site-packages;
+echo PYTHONPATH set to "%PYTHONPATH%"
 
-endlocal
+set Path=%QGIS_PATH%\apps\Python39
+echo Path set to "%Path%"
+
+rem start /b pythonw MBDcode_analyzer.py
+
+python MBDcode_analyzer.py
+
+pause
