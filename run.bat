@@ -25,15 +25,14 @@ if not defined QGIS_PATH (
 exit /b
 )
 
-
 set PYTHONPATH=%QGIS_PATH%\apps\Python39;%QGIS_PATH%\apps\qgis\python;%QGIS_PATH%\apps\qgis-ltr\python;%QGIS_PATH%\apps\Python39\Lib\site-packages;
 echo PYTHONPATH set to "%PYTHONPATH%"
 
 set Path=%QGIS_PATH%\apps\Python39
 echo Path set to "%Path%"
 
-rem start /b pythonw MBDcode_analyzer.py
+start /b pythonw MBDcode_analyzer.py
 
-python MBDcode_analyzer.py
+rem python MBDcode_analyzer.py
 
 pause
